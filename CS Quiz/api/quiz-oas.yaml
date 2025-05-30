@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Quiz API
+  description: Generated with OAS TOOLS CLI 
+
+paths:
+  /api/v1/quiz:
+    get:
+      description: Returns all questions
+      operationId: getQuiz
+      responses:
+        200:
+          description: Questions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/question'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+components:
+  schemas:
+    question:
+        type: object
+        required:
+          - question
+        properties:
+          question:
+            type: string
+          answers:
+            type: array
+            items: {}
+          correct:
+            type: number
+    error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+      additionalProperties: true

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Computer science Quiz</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(to right, #f5f5f5, #e0e0e0);
+    }
+
+    .quiz-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+
+    .loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      color: #777;
+    }
+
+    .progress {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0;
+      background: #4caf50;
+      transition: width 0.4s ease;
+    }
+
+    .question {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .answers button {
+      display: block;
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 12px;
+      background: #f0f0f0;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .answers button:hover {
+      background: #dcdcdc;
+    }
+
+    .correct {
+      background-color: #a8e6cf !important;
+      font-weight: bold;
+    }
+
+    .incorrect {
+      background-color: #ff8b94 !important;
+    }
+
+    .feedback {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .next-btn {
+      margin-top: 2rem;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      background-color: #333;
+      color: white;
+      cursor: pointer;
+      display: none;
+    }
+
+    .score {
+      font-size: 1.8rem;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="loader" id="loader">Loading Quiz...</div>
+    <div class="progress" id="progress" style="display:none;"></div>
+    <div class="progress-bar" style="display:none;"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="nextBtn">Next</button>
+    <div class="score" id="score"></div>
+  </div>
+
+  <script>
+    let quiz = [];
+    let current = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById('question');
+    const answersEl = document.getElementById('answers');
+    const feedbackEl = document.getElementById('feedback');
+    const nextBtn = document.getElementById('nextBtn');
+    const scoreEl = document.getElementById('score');
+    const progressEl = document.getElementById('progress');
+    const progressFill = document.getElementById('progressFill');
+    const loaderEl = document.getElementById('loader');
+    const progressBarEl = document.querySelector('.progress-bar');
+
+    async function fetchQuiz() {
+      try {
+        const response = await fetch('/api/v1/quiz'); // Replace with your API endpoint
+        console.log(response);
+        quiz = await response.json();
+        quiz = quiz[0];
+//        console.log(quiz);
+        loaderEl.style.display = 'none';
+        progressEl.style.display = 'block';
+        progressBarEl.style.display = 'block';
+        loadQuestion();
+      } catch (error) {
+        loaderEl.textContent = 'Failed to load quiz. Please try again later.';
+        console.error('Quiz fetch error:', error);
+      }
+    }
+
+    function loadQuestion() {
+      const q = quiz[current];
+      questionEl.textContent = q.question;
+      answersEl.innerHTML = '';
+      feedbackEl.textContent = '';
+      nextBtn.style.display = 'none';
+      progressEl.textContent = `Question ${current + 1} of ${quiz.length}`;
+      progressFill.style.width = `${((current + 1) / quiz.length) * 100}%`;
+
+      q.answers.forEach((answer, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = answer;
+        btn.onclick = () => selectAnswer(index, btn);
+        answersEl.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(index, btn) {
+      const q = quiz[current];
+      const buttons = answersEl.querySelectorAll('button');
+
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.correct) b.classList.add('correct');
+        else if (i === index) b.classList.add('incorrect');
+      });
+
+      if (index === q.correct) {
+        feedbackEl.textContent = 'Correct!';
+        score++;
+      } else {
+        feedbackEl.textContent = `Incorrect. The correct answer was: ${q.answers[q.correct]}`;
+      }
+
+      nextBtn.style.display = 'inline-block';
+    }
+
+    nextBtn.onclick = () => {
+      current++;
+      if (current < quiz.length) {
+        loadQuestion();
+      } else {
+        showScore();
+      }
+    };
+
+    function showScore() {
+      questionEl.style.display = 'none';
+      answersEl.style.display = 'none';
+      feedbackEl.style.display = 'none';
+      nextBtn.style.display = 'none';
+      progressEl.style.display = 'none';
+      progressBarEl.style.display = 'none';
+      scoreEl.textContent = `You got ${score} out of ${quiz.length} correct!`;
+    }
+
+    fetchQuiz();
+  </script>
+</body>
+</html>
