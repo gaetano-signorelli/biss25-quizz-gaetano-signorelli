@@ -6,7 +6,7 @@ const express = require("express");
 const { initialize } = require('@oas-tools/core');
 
 
-const serverPort = 8080;
+const serverPort = process.env.PORT || 8080;
 const app = express();
 app.use("/",express.static("./public"));
 app.use(express.json({limit: '50mb'}));
