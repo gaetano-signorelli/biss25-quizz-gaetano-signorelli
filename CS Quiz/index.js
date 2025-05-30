@@ -11,7 +11,7 @@ const app = express();
 app.use("/",express.static("./public"));
 app.use(express.json({limit: '50mb'}));
 app.use(oasTelemetry({
-    spec: readFileSync('./api/quiz-oas.yaml', { encoding: 'utf8', flag: 'r' })
+    spec: readFileSync('./api/oas-file.yaml', { encoding: 'utf8', flag: 'r' })
 }));
 const config = {}
 
